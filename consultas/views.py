@@ -5,12 +5,16 @@ from .models import Gravacoes, Pergunta
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, StreamingHttpResponse
 from .agents import RAGContext
+from django.contrib.humanize.templatetags.humanize import naturaltime
 
 def consultas(request, id):
     paciente = get_object_or_404(Pacientes, id=id)
     if request.method == 'GET':
-        gravacoes = Gravacoes.objects.filter(paciente__id=id).order_by('-data')
-        return render(request, 'consultas.html', {'paciente': paciente, 'gravacoes': gravacoes})
+        gravacoes = Gravacoes.objects.filter(paciente__id=id).order_by('data')
+        datas = [naturaltime(item['data']) for item in gravacoes.values('data')]
+        humores = [item['humor'] for item in gravacoes.values('humor')]
+     
+        return render(request, 'consultas.html', {'paciente': paciente, 'gravacoes': gravacoes, 'datas': datas, 'humores': humores})
     elif request.method == 'POST':
         gravacao = request.FILES.get('gravacao')
         data = request.POST.get('data')
@@ -47,4 +51,3 @@ def chat(request, id):
 def stream_response(request, id):
     id_pergunta = request.POST.get('id_pergunta')
     return StreamingHttpResponse(RAGContext().retrieval(id_pergunta, id))
-
