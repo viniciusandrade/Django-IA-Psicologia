@@ -6,7 +6,7 @@ from langchain_community.vectorstores import FAISS
 import os
 import re
 import textwrap
-from .models import Pergunta
+from .models import DataTreinamento, Pergunta
 from langchain_core.prompts import ChatPromptTemplate
 from abc import abstractmethod
 from prompts.prompts import SUMMARY_PROMPT, PSI_PROMPT, EVALUATION_PROMPT
@@ -103,7 +103,14 @@ class RAGContext:
         else:
             docs = vectordb.similarity_search(pergunta.pergunta, k)
 
-
+        for doc in docs:
+            data = DataTreinamento(
+                recording_id=doc.metadata['id_recording'],
+                text=doc.page_content
+            )
+            data.save()
+            pergunta.data_treinamento.add(data)
+                
         contexto = "\n\n".join([
             f"Material: {doc.page_content}"
             for doc in docs

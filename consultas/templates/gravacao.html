@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% load static %} {% block 'body' %}
+{% extends "base.html" %}{% load static %}{% block 'body' %}
 <header
   class="absolute inset-x-0 top-0 z-50 flex h-16 border-b border-gray-900/10"
 >
@@ -62,7 +62,8 @@
           <dd
             class="w-full flex-none text-3xl/10 font-medium tracking-tight text-gray-900"
           >
-            10 <span class="text-sm text-gray-400">palavras</span>
+            {{ gravacao.transcricao|wordcount }}
+            <span class="text-sm text-gray-400">palavras</span>
           </dd>
         </div>
         <div
@@ -72,7 +73,8 @@
           <dd
             class="w-full flex-none text-3xl/10 font-medium tracking-tight text-gray-900"
           >
-            10 <span class="text-sm text-gray-400">Tarefas / lembretes</span>
+            {{ gravacao.resumo|length }}
+            <span class="text-sm text-gray-400">Tarefas / lembretes</span>
           </dd>
         </div>
         <div
