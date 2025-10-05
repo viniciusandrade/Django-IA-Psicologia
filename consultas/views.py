@@ -15,7 +15,7 @@ def consultas(request, id):
 
         gravacao = Gravacoes(
             video=gravacao,
-            data=data,  
+            data=data,
             transcrever=transcript,
             paciente=paciente,
         )
@@ -23,4 +23,7 @@ def consultas(request, id):
         gravacao.save()
 
         return redirect(reverse('consultas', kwargs={'id': id}))
-    
+
+def gravacao(request, id):
+    gravacao = get_object_or_404(Gravacoes, id=id)
+    return render(request, 'gravacao.html', {'gravacao': gravacao})
