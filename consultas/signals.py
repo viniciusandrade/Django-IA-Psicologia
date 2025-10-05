@@ -4,8 +4,7 @@ from django.dispatch import receiver
 from consultas.tasks import task_rag
 from .models import Gravacoes
 from django_q.tasks import async_task, Chain
-#from .tasks import transcribe_recording, summary_recording, task_rag
-from .tasks import transcribe_recording, task_rag
+from .tasks import transcribe_recording, task_rag, summary_recording
 
 @receiver(post_save, sender=Gravacoes)
 def signals_gravacoes_transcricao_resumos(sender, instance, created, **kwargs):
@@ -14,6 +13,6 @@ def signals_gravacoes_transcricao_resumos(sender, instance, created, **kwargs):
             transcribe_recording(instance.id)
             chain = Chain()
             chain.append(transcribe_recording, instance.id)
-            #chain.append(summary_recording, instance.id)
+            chain.append(summary_recording, instance.id)
             chain.append(task_rag, instance.id)
             chain.run()

@@ -159,6 +159,7 @@
           >
         </div>
         <ul role="list" class="divide-y divide-gray-100">
+          {% for tarefa in gravacao.resumo %}
           <li class="relative flex items-center space-x-4 py-4">
             <div class="min-w-0 flex-auto">
               <div class="flex items-center gap-x-3">
@@ -168,9 +169,7 @@
                   <div class="size-2 rounded-full bg-current"></div>
                 </div>
                 <h2 class="min-w-0 text-sm/6 font-semibold text-gray-900">
-                  <a href="#" class="flex gap-x-2"
-                    >Tarefa 1: Fazer mindfulness</a
-                  >
+                  <a href="#" class="flex gap-x-2">{{ tarefa }}</a>
                 </h2>
               </div>
             </div>
@@ -180,6 +179,7 @@
               Resumo
             </div>
           </li>
+          {% endfor %}
         </ul>
       </div>
       <a
