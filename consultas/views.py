@@ -1,7 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from usuarios.models import Pacientes
-from .models import Gravacoes
+from .models import Gravacoes, Pergunta
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse, StreamingHttpResponse
+from .agents import RAGContext
 
 def consultas(request, id):
     paciente = get_object_or_404(Pacientes, id=id)
@@ -27,3 +30,21 @@ def consultas(request, id):
 def gravacao(request, id):
     gravacao = get_object_or_404(Gravacoes, id=id)
     return render(request, 'gravacao.html', {'gravacao': gravacao})
+
+@csrf_exempt
+def chat(request, id):
+    if request.method == 'GET':
+        paciente = get_object_or_404(Pacientes, id=id)
+        return render(request, 'chat.html', {'paciente': paciente})
+    elif request.method == 'POST':
+        pergunta_user=request.POST.get('pergunta')
+        pergunta= Pergunta(
+            pergunta=pergunta_user,)
+        pergunta.save()
+        return JsonResponse({'id': pergunta.id})
+    
+@csrf_exempt
+def stream_response(request, id):
+    id_pergunta = request.POST.get('id_pergunta')
+    return StreamingHttpResponse(RAGContext().retrieval(id_pergunta, id))
+
