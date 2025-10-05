@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, StreamingHttpResponse
 from .agents import RAGContext
 from django.contrib.humanize.templatetags.humanize import naturaltime
+from .wraper_evolutionapi import SendMessage
 
 def consultas(request, id):
     paciente = get_object_or_404(Pacientes, id=id)
@@ -59,3 +60,8 @@ def ver_referencias(request, id):
 
     return render(request, 'ver_referencias.html', {'pergunta': pergunta, 'data_treinamento': data_treinamento, 'gravacoes': gravacoes})
 
+def send_message(request, id):
+    gravacao = get_object_or_404(Gravacoes, id=id)
+    for g in gravacao.resumo:
+        SendMessage().send_message('vitor', {"number": gravacao.paciente.telefone, "textMessage": {"text": g}})
+    return redirect(f'/consultas/gravacao/{id}')
