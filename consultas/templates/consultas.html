@@ -155,7 +155,32 @@
                     </div>
                 </div>
             </div>
-
-        </main>
+            <div class="max-w-5xl mx-auto">
+                <canvas class="mt-6" id="myChart"></canvas>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                const ctx = document.getElementById('myChart');
+                
+                new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: {{datas|safe}},
+                    datasets: [{
+                    label: 'Humor de 1 a 5',
+                    data: {{humores|safe}},
+                    borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                    }
+                }
+            });
+            </script>
+                    </main>
 
     {% endblock 'body' %}
