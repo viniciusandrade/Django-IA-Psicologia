@@ -18,7 +18,7 @@ class RAGContext:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.embeddings = OpenAIEmbeddings(openai_api_key=settings.OPENAI_API_KEY)
-        
+
         self.splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap
@@ -28,7 +28,7 @@ class RAGContext:
             model_name="gpt-4.1-mini",
             temperature=0.7,
             openai_api_key=settings.OPENAI_API_KEY,
-            
+
         )
 
     def train(self, docs, paciente_id):
@@ -43,4 +43,70 @@ class RAGContext:
 
         return vectordb
 
-   
+
+    def retrieval(self, id_pergunta, id_paciente, k=5):
+        pergunta = Pergunta.objects.get(id=id_pergunta)
+        vectordb = FAISS.load_local(self.db_path + f'_{id_paciente}', self.embeddings, allow_dangerous_deserialization=True)
+
+        #docs = vectordb.similarity_search(pergunta.pergunta, k)
+        date = self._extract_date_from_question(pergunta.pergunta)
+        if date:
+            docs = vectordb.similarity_search(pergunta.pergunta, max(k*5, 20), filter={'date': date})
+        else:
+            docs = vectordb.similarity_search(pergunta.pergunta, k)
+
+
+        contexto = "\n\n".join([
+            f"Material: {doc.page_content}"
+            for doc in docs
+        ])
+
+        header = "Transcrições recuperadas do paciente"
+        if date:
+            header += f" — Sessão do dia {date}"
+
+
+        system_prompt = textwrap.dedent(f"""
+            Você é um assistente de um psicólogo com acesso a transcrições de consultas.
+            Responda APENAS com base no CONTEXTO a seguir. Caso a pergunta especifique uma data,
+            considere somente os trechos referentes àquela sessão. Se a informação não estiver no contexto,
+            diga explicitamente que não encontrou e não invente dados.
+
+            Regras:
+            - Seja direto e profissional.
+            - Se houver múltiplos trechos, sintetize sem repetir verbatim.
+            - Se a pergunta pedir "o que foi dito", traga pontos objetivos (tópicos).
+            - Se a pergunta pedir "resumo" ou "síntese", apresente bullets concisos.
+            - Não exponha dados sensíveis como nomes/endereços que não estejam no contexto abaixo.
+            - Caso o contexto esteja vazio, diga que não há material correspondente.
+
+            {header}:
+            ---
+            {contexto or "∅ (sem resultados)"}
+            ---
+        """).strip()
+
+
+        messages = [
+            {'role': 'system', 'content': system_prompt},
+            {'role': 'user', 'content': f'{pergunta.pergunta}'}
+        ]
+
+        for chunk in self.chat.stream(messages):
+            token = chunk.content
+            if token:
+                yield token
+
+
+    def _extract_date_from_question(self, pergunta: str):
+        # captura primeiro padrão dd/mm[/aaaa]
+        m = re.search(r'\b\d{1,2}/\d{1,2}(?:/\d{4})?\b', pergunta)
+        if m:
+            return m.group(0)  # retorna exatamente o que foi escrito
+
+        # captura yyyy-mm-dd
+        m2 = re.search(r'\b\d{4}-\d{2}-\d{2}\b', pergunta)
+        if m2:
+            return m2.group(0)
+
+        return None
