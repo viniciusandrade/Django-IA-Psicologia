@@ -2,9 +2,13 @@
 
 Projeto de aplicação web utilizando Django e integração com a API do OpenAI para auxiliar psicólogos no atendimento a pacientes.
 
-## Executando localmente
+## Comandos para desenvolvimento
 
 ```
+
+python manage.py migrate
+
+python manage.py createsuperuser
 
 python manage.py runserver
 
